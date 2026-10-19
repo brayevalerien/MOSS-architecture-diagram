@@ -86,7 +86,8 @@
 
   // joint sequence
   op((cat-x, main-y), "cat", "CAT")
-  arrow("img-in.east", ((), "-|", "cat"), "cat.north")
+  wire("img-in.east", (cat-x, 0))
+  vwire(cat-x, 0, main-y + op-r, hops: (vec-y + 1.2, mod-y))
   arrow("tb2.east", ((), "-|", "cat"), "cat.south")
 
   // main stack

@@ -94,3 +94,18 @@
   import cetz.draw: *
   content(pos, text(size: 14pt, weight: "bold")[...])
 }
+
+// Vertical wire from y0 to y1 (either direction) that jumps over horizontal wires at each y in hops
+#let vwire(x, y0, y1, hops: (), r: 0.15, head: true) = {
+  import cetz.draw: *
+  let dir = if y1 > y0 { 1 } else { -1 }
+  let ys = hops.sorted()
+  if dir < 0 { ys = ys.rev() }
+  let cur = y0
+  for c in ys {
+    line((x, cur), (x, c - dir * r))
+    arc((x, c - r), start: -90deg, stop: 90deg, radius: r)
+    cur = c + dir * r
+  }
+  line((x, cur), (x, y1), mark: if head { (end: "stealth") } else { none })
+}

@@ -78,9 +78,9 @@
   block((0, -3), "chunk-m", "chunk", h: 3.8)
   arrow("mod.east", "chunk-m.west")
   let one-y = 1.2
-  // same order as the chunk in the code, so each scale wire hops over the shift wire above it
+  // same order as the chunk in the code, so each scale wire hops over the shift wire above it,
+  // and every wire hops over the residual stream
   let step = 0.62
-  let hop = 0.15
   let outs = (
     ("shift", "a", 4, "shift-a"),
     ("scale", "a", 3, "scale-a"),
@@ -95,17 +95,17 @@
     note((block-w / 2 + 0.08, y + 0.02), lbl, side: "south-west")
     if kind == "scale" {
       op((x, one-y), "one-" + target, "+", r: 0.2)
-      wire((block-w / 2, y), (x, y), (x, y + step - hop))
-      arc((x, y + step - hop), start: -90deg, stop: 90deg, radius: hop)
-      arrow((x, y + step + hop), "one-" + target + ".south")
+      wire((block-w / 2, y), (x, y))
+      vwire(x, y, one-y - 0.2, hops: (y + step, 0))
       arrow("one-" + target + ".north", target + ".south")
       arrow((x - 0.8, one-y), "one-" + target + ".west")
       note((x - 0.85, one-y), "1", side: "east")
     } else if kind == "shift" {
       wire((block-w / 2, y), (x, y))
-      arrow((x, y), target + ".south")
+      vwire(x, y, a-y - 0.28, hops: (0,))
     } else {
-      wire((block-w / 2, y), (x, y), (x, 1.2))
+      wire((block-w / 2, y), (x, y))
+      vwire(x, y, 1.2, hops: (0,), head: false)
       arrow((x, 1.2), target + ".east")
     }
   }
