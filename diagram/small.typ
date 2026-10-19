@@ -1,0 +1,110 @@
+#import "lib.typ": *
+
+#let mlp-emb() = cetz.canvas({
+  import cetz.draw: *
+  setup()
+  io((0, 0), "in", raw("x"), side: "east")
+  block((1.3, 0), "l1", "Linear")
+  block((2.6, 0), "act", "SiLU")
+  block((3.9, 0), "l2", "Linear")
+  io((5.2, 0), "out", raw("vec"), side: "west")
+  arrow("in.east", "l1.west")
+  arrow("l1.east", "act.west")
+  arrow("act.east", "l2.west")
+  arrow("l2.east", "out.west")
+  note((0.55, 0), [256])
+  note((4.55, 0), [3072])
+})
+
+// Computed once per step from vec, then shared by all the blocks (no SiLU before the Linear)
+#let modulation() = cetz.canvas({
+  import cetz.draw: *
+  setup()
+  io((0, 0), "in", raw("vec"), side: "east")
+  block((1.4, 0), "l", "Linear")
+  block((3.4, 0), "c", "chunk", h: 2.4)
+  arrow("in.east", "l.west")
+  arrow("l.east", "c.west")
+  note((2.4, 0), [6 × 3072])
+  let names = ([shift#sub[a]], [scale#sub[a]], [gate#sub[a]], [shift#sub[f]], [scale#sub[f]], [gate#sub[f]])
+  for (i, n) in names.enumerate() {
+    let y = 1 - i * 0.4
+    arrow((3.4 + block-w / 2, y), (4.5, y))
+    note((4.55, y - 0.01), n, side: "west")
+  }
+})
+
+#let last-layer() = cetz.canvas({
+  import cetz.draw: *
+  setup()
+  io((0, 0), "in", raw("img"), side: "east")
+  block((1.3, 0), "norm", "RMSNorm")
+  op((2.7, 0), "scale", "×")
+  op((3.9, 0), "shift", "+")
+  block((5.1, 0), "l", "Linear")
+  io((6.5, 0), "out", raw("v"), side: "west")
+  arrow("in.east", "norm.west")
+  arrow("norm.east", "scale.west")
+  arrow("scale.east", "shift.west")
+  arrow("shift.east", "l.west")
+  arrow("l.east", "out.west")
+  note((0.55, 0), [3072])
+  note((5.85, 0), [128])
+
+  io((0, 3), "vec", raw("vec"), side: "east")
+  block((1.3, 3), "m", "Linear")
+  block((2.3, 3), "c", "chunk", h: 1.2)
+  arrow("vec.east", "m.west")
+  arrow("m.east", "c.west")
+  op((2.7, 1.2), "one", "+", r: 0.2)
+  wire((2.3 + block-w / 2, 3.3), (3.9, 3.3))
+  arrow((3.9, 3.3), "shift.north")
+  wire((2.3 + block-w / 2, 2.7), (2.7, 2.7))
+  arrow((2.7, 2.7), "one.north")
+  arrow("one.south", "scale.north")
+  arrow((1.9, 1.2), "one.west")
+  note((1.85, 1.2), "1", side: "east")
+  note((3.95, 2.2), [shift], side: "west")
+  note((2.75, 2.2), [scale], side: "west")
+})
+
+// SiTU-GLU(u, g) = softcap4(g) · sigmoid(g) · softcap25(u)
+#let situ-glu() = cetz.canvas({
+  import cetz.draw: *
+  setup()
+  io((0, 1.6), "u", raw("u"), side: "east")
+  io((0, -1), "g", raw("g"), side: "east")
+  block((1.6, 1.6), "cap-u", [Softcap 25])
+  block((1.6, -0.4), "cap-g", [Softcap 4])
+  block((1.6, -2.4), "sig", "Sigmoid")
+  arrow("u.east", "cap-u.west")
+  wire("g.east", (0.8, -1))
+  wire((0.8, -0.4), (0.8, -2.4))
+  arrow((0.8, -0.4), "cap-g.west")
+  arrow((0.8, -2.4), "sig.west")
+  op((3, -1.4), "m1", "×")
+  arrow("cap-g.east", ((), "-|", "m1"), "m1.north")
+  arrow("sig.east", ((), "-|", "m1"), "m1.south")
+  op((4.1, 0.1), "m2", "×")
+  arrow("cap-u.east", ((), "-|", "m2"), "m2.north")
+  arrow("m1.east", ((), "-|", "m2"), "m2.south")
+  arrow("m2.east", (5.3, 0.1))
+})
+
+// softcap_β(x) = β tanh(x / β), keeps the FFN activations bounded
+#let softcap() = cetz.canvas({
+  import cetz.draw: *
+  setup()
+  io((0, 0), "in", raw("x"), side: "east")
+  op((1.2, 0), "div", "÷")
+  block((2.4, 0), "tanh", "tanh")
+  op((3.6, 0), "mul", "×")
+  arrow("in.east", "div.west")
+  arrow("div.east", "tanh.west")
+  arrow("tanh.east", "mul.west")
+  arrow("mul.east", (4.7, 0))
+  arrow((1.2, -1.1), "div.south")
+  arrow((3.6, -1.1), "mul.south")
+  note((1.2, -1.15), [β], side: "north")
+  note((3.6, -1.15), [β], side: "north")
+})
