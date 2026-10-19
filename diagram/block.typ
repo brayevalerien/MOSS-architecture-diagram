@@ -78,22 +78,26 @@
   block((0, -3), "chunk-m", "chunk", h: 3.8)
   arrow("mod.east", "chunk-m.west")
   let one-y = 1.2
+  // same order as the chunk in the code, so each scale wire hops over the shift wire above it
+  let step = 0.62
+  let hop = 0.15
   let outs = (
-    ("scale", "a", 3, "scale-a"),
     ("shift", "a", 4, "shift-a"),
+    ("scale", "a", 3, "scale-a"),
     ("gate", "a", 10.9, "gate-a"),
-    ("scale", "f", 13, "scale-f"),
     ("shift", "f", 14, "shift-f"),
+    ("scale", "f", 13, "scale-f"),
     ("gate", "f", 20.9, "gate-f"),
   )
   for (i, (kind, idx, x, target)) in outs.enumerate() {
-    let y = -1.45 - i * 0.62
+    let y = -1.45 - i * step
     let lbl = [#kind#sub(idx)]
     note((block-w / 2 + 0.08, y + 0.02), lbl, side: "south-west")
     if kind == "scale" {
       op((x, one-y), "one-" + target, "+", r: 0.2)
-      wire((block-w / 2, y), (x, y))
-      arrow((x, y), "one-" + target + ".south")
+      wire((block-w / 2, y), (x, y), (x, y + step - hop))
+      arc((x, y + step - hop), start: -90deg, stop: 90deg, radius: hop)
+      arrow((x, y + step + hop), "one-" + target + ".south")
       arrow("one-" + target + ".north", target + ".south")
       arrow((x - 0.8, one-y), "one-" + target + ".west")
       note((x - 0.85, one-y), "1", side: "east")

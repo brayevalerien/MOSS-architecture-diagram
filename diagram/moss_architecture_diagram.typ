@@ -6,6 +6,7 @@
 #import "attention.typ": *
 #import "pipeline.typ": *
 
+#set document(title: "MOSS-Image architecture diagram", author: "Valérien")
 #set page(width: auto, height: auto, margin: 1.5cm, fill: white)
 #set text(font: font)
 #set align(center)

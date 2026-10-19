@@ -94,8 +94,3 @@
   import cetz.draw: *
   content(pos, text(size: 14pt, weight: "bold")[...])
 }
-
-#let title(pos, body, size: 13pt) = {
-  import cetz.draw: *
-  content(pos, text(size: size, body), anchor: "north")
-}
